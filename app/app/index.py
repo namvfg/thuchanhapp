@@ -1,12 +1,12 @@
-from tempfile import template
+from flask import render_template
+from app import dao
+from app import appdemo
 
-from flask import Flask, render_template
-
-appdemo = Flask(__name__)
 
 @appdemo.route("/")
 def index():
-    return render_template("index.html")
+    cates = dao.load_categories()
+    return render_template("index.html", categories = cates)
 
 if __name__ == "__main__":
     appdemo.run(debug=True)
