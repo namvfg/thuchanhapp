@@ -1,16 +1,14 @@
-import json
 from app import appdemo
+from app.models import Category, Product
 
 
 def load_categories():
-    with open("%s/data/categories.json" % appdemo.root_path, encoding='utf-8') as f:
-        return json.load(f)
+    return Category.query.all()
 
 def load_products(cate_id=None):
-    with open("%s/data/products.json" % appdemo.root_path, encoding='utf-8') as f:
-        products = json.load(f)
+    products = Product.query
 
     if cate_id:
-        products = [prod for prod in products if prod["category_id"] == int(cate_id)]
+        products = products.filter(Product.category_id.__eq__(cate_id))
 
-    return products
+    return products.all()
