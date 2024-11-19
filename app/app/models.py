@@ -11,15 +11,14 @@ class BaseModel(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 class Category(BaseModel):
-    __tablename__ = "category"
-
     name = Column(String(100), nullable=False)
+
     products = relationship("Product", backref="category", lazy=True)
 
+    def __str__(self):
+        return self.name
 
 class Product(BaseModel):
-    __tablename__ = "product"
-
     name = Column(String(50), nullable=False)
     description = Column(Text)
     price = Column(Float, default=0)
@@ -27,14 +26,16 @@ class Product(BaseModel):
     active = Column(Boolean, default=True)
     category_id = Column(Integer, ForeignKey(Category.id), nullable=False)
 
-
+    def __str__(self):
+        return self.name
 
 if __name__ == "__main__":
     with appdemo.app_context():
-        # c1 = Category(name="Mobile")
-        # c2 = Category(name="Tablet")
-        # c3 = Category(name="Laptop")
-
+    #     c1 = Category(name="Mobile")
+    #     c2 = Category(name="Tablet")
+    #     c3 = Category(name="Laptop")
+    #
+    #     db.session.add_all([c1, c2, c3])
     #     products = [{
     #     "id": 1,
     #     "name": "iPhone 7 Plus",
