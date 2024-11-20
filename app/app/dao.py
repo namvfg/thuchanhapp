@@ -1,6 +1,7 @@
 
 from app import appdemo
-from app.models import Category, Product
+from app.models import Category, Product, User
+import hashlib
 
 
 def load_categories():
@@ -26,3 +27,11 @@ def count_product():
 
 def get_product_by_id(product_id):
     return Product.query.get(product_id)
+
+def auth_user(username, password):
+    password = str(hashlib.md5(password.strip().encode("utf-8")).digest())
+
+    return User.query.filter(User.username.__eq__(username.strip()), User.password.__eq__(password)).first()
+
+def get_user_by_id(userid):
+    return User.query.get(userid)

@@ -1,10 +1,17 @@
+from encodings.utf_7 import encode
+
 from flask_admin.contrib.geoa import ModelView
 from flask_sqlalchemy.model import Model
-from sqlalchemy import Column, Integer, String, Float, Text, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Text, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from app import db, appdemo
+from enum import Enum as UserEnum
+from flask_login import UserMixin
 import json
 
+class UserRole(UserEnum):
+    USER = 1
+    ADMIN = 2
 class BaseModel(db.Model):
     __abstract__ = True
 
@@ -28,6 +35,18 @@ class Product(BaseModel):
 
     def __str__(self):
         return self.name
+
+class User(BaseModel, UserMixin):
+    name = Column(String(100), nullable=False)
+    username = Column(String(50), nullable=False)
+    password = Column(String(50), nullable=False)
+    avatar = Column(String(100), nullable=False)
+    active = Column(Boolean, default=True)
+    user_role = Column(Enum(UserRole), default=UserRole.USER)
+
+    def __str__(self):
+        return self.name
+
 
 if __name__ == "__main__":
     with appdemo.app_context():
@@ -136,4 +155,12 @@ if __name__ == "__main__":
     #         p = Product(**p)
     #         db.session.add(p)
     #     db.session.commit()
+
+        import hashlib
+        pwd = str(hashlib.md5("123456".encode("utf-8")).digest())
+        user1 = User(name="Nguyễn Đông Dun", username="namvfg", password=pwd,
+                     avatar="https://res.cloudinary.com/dxxwcby8l/image/upload/v1647248722/r8sjly3st7estapvj19u.jpg",
+                     user_role=UserRole.ADMIN)
+        db.session.add(user1)
+        db.session.commit()
         db.create_all()
