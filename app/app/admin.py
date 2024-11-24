@@ -5,19 +5,44 @@ from app import db, appdemo
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user
+from wtforms import TextAreaField
+from wtforms.widgets import TextArea
+
+class CKTextAreaWidget(TextArea):
+    def __call__(self, field, **kwargs):
+        if kwargs.get('class'):
+            kwargs['class'] += ' ckeditor'
+        else:
+            kwargs.setdefault('class', 'ckeditor')
+        return super(CKTextAreaWidget, self).__call__(field, **kwargs)
+
+class CKTextAreaField(TextAreaField):
+    widget = CKTextAreaWidget()
+
+class MessageAdmin(ModelView):
+    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
+
+    form_overrides = {
+        'body': CKTextAreaField
+    }
 
 class ProductView(ModelView):
     column_list = ['name', 'description', 'price', 'active', 'category'] #các cột có thể hiện
-
-    column_searchable_list = ['name', 'description'] #có thể tìm theo các thuộc tính
-    column_filters = ['name', 'price'] #có thể lọc theo các thuoc tính
-    column_labels = {    #tiêu đề của từng cột
+    column_labels = {  # tiêu đề của từng cột
         'name': 'Tên sản phẩm',
         'description': 'Mô tả',
         'price': 'Giá',
         'category': 'Danh mục',
         'active': 'Còn bán'
     }
+    extra_js = ['//cdn.ckeditor.com/4.6.0/standard/ckeditor.js']
+    form_overrides = {
+        "description": CKTextAreaField
+    }
+
+    column_searchable_list = ['name', 'description'] #có thể tìm theo các thuộc tính
+    column_filters = ['name', 'price'] #có thể lọc theo các thuoc tính
+
 
     form_columns = ['name', 'description', 'price', 'image', 'active', 'category_id'] #các cột hiện ra khi create
 
@@ -28,7 +53,9 @@ class ProductView(ModelView):
         return current_user.is_authenticated
 
 class CategoryView(ModelView):
-    pass
+
+    def is_accessible(self):
+        return current_user.is_authenticated
 
 
 class StatsView(BaseView):

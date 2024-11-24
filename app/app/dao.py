@@ -1,5 +1,5 @@
 
-from app import appdemo
+from app import appdemo, db
 from app.models import Category, Product, User
 import hashlib
 
@@ -35,3 +35,11 @@ def auth_user(username, password):
 
 def get_user_by_id(userid):
     return User.query.get(userid)
+
+def register(name, username, password, avatar):
+    password = str(hashlib.md5(password.strip().encode("utf-8")).digest())
+    u = User(name=name, username=username,
+             password = password,
+             avatar = avatar)
+    db.session.add(u)
+    db.session.commit()
