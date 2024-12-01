@@ -1,111 +1,66 @@
 import hashlib
 import math
+from itertools import product
 
-from flask import render_template, request, redirect, session
+from flask import render_template, request, redirect, session, jsonify
 from app import dao
-from app import appdemo, db, login, admin
-from flask_login import login_user, logout_user, current_user
+from app import appdemo, db, login, admin, utils, controller
+from flask_login import login_user, logout_user, current_user, login_required
 import cloudinary.uploader
 from app.decorators import annonymous_user
 
 
-@appdemo.route("/")
-def index():
-    cate_id = request.args.get("category_id")
-    keyword = request.args.get("keyword")
-    page = request.args.get("page", 1)
+############################### render ###############################
 
-    page_size = appdemo.config["PAGE_SIZE"]
+#trang chu index.html
+appdemo.add_url_rule("/", "index", controller.index)
 
-    page_count = dao.count_product()
+#chi tiet san pham
+appdemo.add_url_rule("/product/<int:product_id>", "product_detail", controller.details)
 
-    prods = dao.load_products(cate_id=cate_id, keyword=keyword, page=int(page))
-    return render_template("index.html",
-                           products=prods,
-                           pages=math.ceil(page_count/page_size))
+#dang nhâp admin
+appdemo.add_url_rule("/login-admin", "login_admin", controller.admin_login, methods=['post'])
+
+#dang ky user
+appdemo.add_url_rule("/register", "register", controller.register, methods=['post', 'get'])
+
+#dang nhap user
+appdemo.add_url_rule("/login", "login", controller.login_my_user, methods=["get", "post"])
+
+#dang xuat user
+appdemo.add_url_rule("/logout", "logout", controller.logout_my_user)
+
+#gio hang
+appdemo.add_url_rule("/cart", "cart", controller.cart)
+
+###################################################################
 
 
-@appdemo.route("/product/<int:product_id>")
-def details(product_id):
-    product = dao.get_product_by_id(product_id=product_id)
-    return render_template("detail.html", product=product)
 
-@appdemo.route("/login-admin", methods=['post'])
-def admin_login():
-    username = request.form['username']
-    password = request.form['password']
+############################### api ###############################
 
-    user = dao.auth_user(username=username, password=password)
-    if user:
-        login_user(user=user)
+#api them hang vao gio hang
+appdemo.add_url_rule("/api/cart", "api_cart", controller.add_to_cart, methods=["post"])
 
-    return redirect('/admin')
+#api update gio hang
+appdemo.add_url_rule("/api/cart/<product_id>", "api_cart_productId_update", controller.update_cart, methods=['put'])
 
-@appdemo.route("/register", methods=['post', 'get'])
-def register():
-    err_msg = ""
-    if request.method.__eq__('POST'):
-        password = request.form["password"]
-        confirm_password = request.form["confirm-password"]
-        if password.__eq__(confirm_password):
-            #upload
-            avatar = ""
-            res = cloudinary.uploader.upload(request.files["avatar"])
-            avatar = res["secure_url"]
-            #save user
-            try:
-                dao.register(name=request.form["name"],
-                             username=request.form["username"],
-                             password=password,
-                             avatar=avatar)
-                return redirect("/login")
-            except:
-                err_msg = "Hệ thống đang có lỗi! Vui lòng thử lại sau"
-        else:
-            err_msg = "Mật khẩu không khớp"
+#api xoa gio hang
+appdemo.add_url_rule("/api/cart/<product_id>", "api_cart_productId_delete", controller.delete_cart, methods=['delete'])
 
-    return render_template("register.html", err_msg=err_msg)
+#api thanh toan
+appdemo.add_url_rule("/api/pay", "api_pay", controller.pay)
 
-@appdemo.route("/login", methods=["get", "post"])
-@annonymous_user
-def login_my_user():
-    if request.method.__eq__("POST"):
-        username = request.form["username"]
-        password = request.form["password"]
-        user = dao.auth_user(username.strip(), password)
-        if user:
-            login_user(user=user)
-            return redirect("/")
-    return render_template("login.html")
+############################ end api ##################################
 
-@appdemo.route("/logout")
-def logout_my_user():
-    logout_user()
-    return redirect("/login")
 
-@appdemo.route("/cart")
-def cart():
-    session["cart"] = {
-        "1": {
-            "id": "1",
-            "name": "iphone 13",
-            "price": 12000000,
-            "quantity": 10,
-        },
-        "2": {
-            "id": "2",
-            "name": "iphone 14",
-            "price": 24000000,
-            "quantity": 15,
-        }
-    }
-    return render_template("cart.html")
 
 @appdemo.context_processor
 def common_attr():
     cates = dao.load_categories()
     return {
-        'categories': cates
+        'categories': cates,
+        'cart': utils.cart_stats(session.get(appdemo.config["CART_KEY"]))
     }
 
 @login.user_loader

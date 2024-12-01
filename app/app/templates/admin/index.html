@@ -4,6 +4,45 @@
 <h1 class="text-center text-info">Chào bạn đến trang quản trị</h1>
 {% if current_user.is_authenticated %}
 <h3>Chào <span class="text-danger">{{ current_user.name }}</span></h3>
+
+<div class="row">
+    <div class="col-md-5 col-12">
+        <table class="table">
+            <tr>
+                <th>Id</th>
+                <th>Tên danh mục</th>
+                <th>Số sản phẩm</th>
+            </tr>
+
+            {% for stat in stats %}
+            <tr>
+                <td>{{ stat[0] }}</td>
+                <td>{{ stat[1] }}</td>
+                <td>{{ stat[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="col-md-7 col-12">
+        <canvas id="cateStats"></canvas>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/my-chart.js') }}"></script>
+<script>
+    let labels = []
+    let data = []
+    {% for stat in stats %}
+        labels.push('{{ stat[1] }}')
+        data.push({{ stat[2] }})
+    {% endfor %}
+    window.onload = function() {
+        drawCateChart(labels, data)
+    }
+</script>
+
 {% else %}
 <form method="post" action="/login-admin">
     <div class="mb-3 mt-3">

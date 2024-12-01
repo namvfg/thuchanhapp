@@ -2,4 +2,65 @@
 
 {% block body %}
 <h1 class="text-center text-success">Thống kê báo cáo</h1>
+<div class="row">
+    <div class="col-md-5 col-12">
+        <table class="table">
+            <tr>
+                <th>Id</th>
+                <th>Tên sản phẩm</th>
+                <!--<th>Số sản phẩm</th>-->
+                <th>Doanh thu</th>
+            </tr>
+
+            {% for revenue in revenues %}
+            <tr>
+                <td>{{ revenue[0] }}</td>
+                <td>{{ revenue[1] }}</td>
+                <!--<td>{{ revenue[2] }}</td>-->
+                <td>{{ "{:,.0f}".format(revenue[3]) }} VNĐ</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="col-md-7 col-12">
+
+        <form action="">
+            <div class="form-group">
+                <input type="text" name="keyword" class="form-control" placeholder="Nhập từ khóa">
+            </div>
+
+             <div class="form-group">
+                 <label>Từ ngày</label>
+                <input type="date" name="from_date" class="form-control">
+            </div>
+
+              <div class="form-group">
+                 <label>Đến ngày</label>
+                <input type="date" name="to_date" class="form-control">
+            </div>
+
+            <div>
+                <input type="submit" class="btn btn-info" value="Lọc dữ liệu">
+            </div>
+        </form>
+
+        <canvas id="revenues"></canvas>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/my-chart.js') }}"></script>
+<script>
+    let labels = []
+    let data = []
+    {% for revenue in revenues %}
+        labels.push('{{ revenue[1] }}')
+        data.push({{ revenue[3] }})
+    {% endfor %}
+    window.onload = function() {
+        drawRevenueChart(labels, data)
+    }
+</script>
 {% endblock %}
